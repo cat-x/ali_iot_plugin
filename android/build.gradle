@@ -1,0 +1,124 @@
+group 'com.fenda.iot.flutter.channel'
+version '1.0-SNAPSHOT'
+
+buildscript {
+    ext.kotlin_version = '1.4.21'
+    repositories {
+        google()
+        jcenter()
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:4.1.1'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+rootProject.allprojects {
+    repositories {
+        google()
+        jcenter()
+        maven { url "https://jitpack.io" }
+        maven { url 'https://maven.aliyun.com/repository/jcenter' }
+        maven { url 'https://maven.google.com' }
+        mavenLocal()
+        maven { url "http://maven.aliyun.com/nexus/content/repositories/releases" }
+        mavenCentral()
+        maven { url "http://maven.aliyun.com/nexus/content/repositories/snapshots" }
+    }
+}
+
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+
+android {
+    compileSdkVersion 30
+
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+    }
+    defaultConfig {
+        minSdkVersion 21
+    }
+    lintOptions {
+        disable 'InvalidPackage'
+    }
+}
+
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+
+    api 'com.aliyun.iot.aep.sdk:debugcanary:0.0.1@aar'
+
+
+    //通用SDK 【通用SDK用来帮助所有SDK做初始化和统一设置，比如设置语言、设置国家等。】
+    api 'com.aliyun.iot.aep.sdk:sdk-framework:0.1.7.2'
+
+    // API通道 【API通道SDK是IoT官方服务的API通道。 API通道基于HTTPS协议，并通过整合安全组件来提升通道的安全性。集成该SDK后，可以通过调用SDK的请求接口，完成对生活物联网平台云端接口的调用。】
+    api 'com.aliyun.iot.aep.sdk:apiclient:0.1.1'
+
+    // API通道 【API通道SDK是IoT官方服务的API通道。 API通道基于HTTPS协议，并通过整合安全组件来提升通道的安全性。集成该SDK后，可以通过调用SDK的请求接口，完成对生活物联网平台云端接口的调用。】
+    api 'com.aliyun.alink.linksdk:api-client-biz:1.0.3'
+
+    //账号及用户SDK 【UT SDK的依赖】
+    api 'com.aliyun.ams:alicloud-android-utdid:1.1.5.3'
+
+    //BoneMobile容器SDK 【BoneMobile容器SDK为可选模块，提供了加载插件的功能。如果您需要开发或者使用插件，则需要在App中集成BoneMobile容器SDK。】
+    api 'com.aliyun.iot.aep.page:rn:0.3.5'
+
+    // 长连接 【长连接通道SDK，提供IoT业务协议封装的云端数据下行能力。为App提供订阅、发布消息的能力和支持请求响应模型。】
+    api 'com.aliyun.iot.aep.sdk:connectchannel:0.1.4'
+
+    //身份认证 SDK 【提供基于iotToken的用户身份认证方案，通过和账号及用户SDK、API通道SDK的集成，完成用户身份凭证的生成和管理，以及发起API请求的用户身份的鉴权。】
+    api 'com.aliyun.iot.aep.sdk:iot-credential:0.0.2.9'
+
+    //账号及用户SDK 【账号和用户SDK提供了账号能力，包括注册、登录、登出、获取账号、会话管理、人机校验等功能，还提供了UI集成显示、UI定制等能力。】
+    api 'com.aliyun.iot.sdk:account-oa-ui:0.1.8.1'
+
+    //移动应用推送SDK 【阿里移动推送，帮助App快速集成移动推送的功能。在实现高效、精确、实时的移动推送的同时】
+    api 'com.aliyun.iot.aep.sdk:push:1.0.6.2'
+
+
+    // 设备模型 SDK 【设备模型SDK提供了App端的设备模型（属性、事件、服务），用来开发设备界面，实现手机对设备的查看和控制。】
+    api 'com.aliyun.alink.linksdk:public-tmp-ext-boneplugin:1.8.1'
+
+    api 'com.aliyun.alink.linksdk:ilop-devicecenter-ext-boneplugin:1.5.1'
+
+    //配网SDK 【提供了把WiFi设备配置上家庭路由器以及局域网内已联网设备的发现能力，具体方案包括一键广播配网（P2P）、手机热点配网、蓝牙辅助配网、智能路由器配网以及设备间相互配网等】
+    api 'com.aliyun.alink.linksdk:ilop-devicecenter:1.7.7.6'
+
+
+    //配网SDK 【如果需要蓝牙辅助配网能力，请加上如下依赖】
+    //设备模型SDK 【支持蓝牙设备时，需要导入如下的依赖】
+    api 'com.aliyun.alink.linksdk:breeze-biz:1.2.0.1'
+
+
+    //设备模型SDK  【支持蓝牙设备时，需要导入如下的依赖】
+    api 'com.aliyun.alink.linksdk:lpbs-plugin-breeze:1.2.0'
+
+    //设备模型SDK  【支持蓝牙设备时，需要导入如下的依赖】
+    api 'com.aliyun.alink.linksdk:ble-library:1.3.1'
+
+    //设备模型SDK  【支持蓝牙设备时，需要导入如下的依赖】
+    //蓝牙OTA SDK 【SDK提供蓝牙OTA业务的App端解决方案，提供了蓝牙设备固件升级的能力。】
+    api 'com.aliyun.alink.linksdk:breeze:1.3.1'
+
+    //蓝牙OTA SDK 【SDK提供蓝牙OTA业务的App端解决方案，提供了蓝牙设备固件升级的能力。】
+    api 'com.aliyun.alink.linksdk:breeze-ota:1.2.2'
+
+
+    //账号及用户SDK 【账号和用户SDK提供了账号能力，包括注册、登录、登出、获取账号、会话管理、人机校验等功能，还提供了UI集成显示、UI定制等能力。】
+    api 'com.alibaba.sdk.android.openaccount:openaccount-ui-default:3.6.4'
+
+
+    //设备接入Link SDK 【Link SDK由阿里云提供给设备厂商，由设备厂商集成到设备上后通过该SDK将设备安全地接入到阿里云IoT物联网平台，继而让设备可以被阿里云IoT物联网平台进行管理。】
+    api 'com.aliyun.alink.linksdk:public-channel-gateway:1.6.5'
+
+
+    // Dependency for Google Sign-In
+//    compileOnly 'com.google.android.gms:play-services-auth:18.1.0'
+//    compileOnly 'com.google.auto.value:auto-value-annotations:1.7.4'
+//    //facebook
+
+    compileOnly 'com.facebook.android:facebook-android-sdk:8.0.0'
+}
