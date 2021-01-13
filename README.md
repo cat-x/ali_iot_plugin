@@ -14,13 +14,21 @@ dependencies:
 ```
 
 1. Android
-> AppApplication 需要继承 IotApplication()
-> 按照生活物联网平台  [集成安全图片](https://help.aliyun.com/document_detail/143857.html?spm=a2c4g.11186623.2.6.2e59150biJwvkA)
-> 可能需要集成    implementation 'com.facebook.android:facebook-android-sdk:8.0.0'
+* AppApplication 需要继承 IotApplication()  
+* 按照生活物联网平台  [集成安全图片](https://help.aliyun.com/document_detail/143857.html?spm=a2c4g.11186623.2.6.2e59150biJwvkA)  
+* 可能需要集成    implementation 'com.facebook.android:facebook-android-sdk:8.0.0'  
 
 2. iOS
-> 按照生活物联网平台  [集成安全图片](https://help.aliyun.com/document_detail/143857.html?spm=a2c4g.11186623.2.6.2e59150biJwvkA)
-> 需要在AppDelegate的application方法中调用ALiAppDelegate.application(application,didFinishLaunchingWithOptions:launchOptions)
+* 按照生活物联网平台  [集成安全图片](https://help.aliyun.com/document_detail/143857.html?spm=a2c4g.11186623.2.6.2e59150biJwvkA)  
+* 添加Pod源
+```ruby
+# github 官方 pod 源
+source 'https://github.com/CocoaPods/Specs.git' 
+
+# 阿里云 pod 源
+source 'https://github.com/aliyun/aliyun-specs.git' 
+```
+* 需要在AppDelegate的application方法中调用ALiAppDelegate.application(application,didFinishLaunchingWithOptions:launchOptions)  
 ```swift
 @UIApplicationMain
 @objc class AppDelegate: FlutterAppDelegate {
@@ -52,9 +60,16 @@ dependencies:
 import 'package:ali_iot_plugin/index.dart';
 
 CommonAPI.logout();
-
 CommonAPI.authCodeLogin(authCode);
 
+DispatchNetAPI.startDiscovery(callback);
+DispatchNetAPI.stopDiscovery();
+DispatchNetAPI.listenGatewayPermit(callback);
+DispatchNetAPI.stopListenGatewayPermit();
+
+DevicePanelAPI.getDevicePanelProperties()
+DevicePanelAPI.setDevicePanelProperties({"items": params, "iotId": iotId})
+DevicePanelAPI.getDevicePanelStatus()
 
 static Future<dynamic> requestApi(
     String path,
