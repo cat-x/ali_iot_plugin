@@ -6,7 +6,7 @@ import Foundation
 
 class ApiTools: NSObject {
 
-    class func request(_ params: [String: Any?], onResponse: @escaping (_ data: IMSResponse?) -> (), onFailure: @escaping (_ error: Error?) -> ()) {
+    class func request(_ params: [String: Any?], onResponse: @escaping (_ data: IMSResponse?) -> (), onFailure: @escaping (_ error: Error?) -> ()) throws{
         var path: String = ""
         var version: String = ""
         var scheme: String = ""

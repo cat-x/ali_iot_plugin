@@ -1,5 +1,6 @@
 package com.fenda.iot.third.api
 
+import com.aliyun.alink.business.devicecenter.api.add.DeviceInfo
 import com.aliyun.iot.aep.sdk.apiclient.callback.IoTResponse
 import com.google.gson.Gson
 import io.flutter.plugin.common.JSONUtil
@@ -64,5 +65,30 @@ fun Any.toJSONObject(usedGson: Boolean = true): JSONObject {
 fun Any.toJSONString(): String {
     return Gson().toJson(this)
 
+}
+
+fun JSONObject.toDeviceInfo(): DeviceInfo {
+    val deviceInfo = DeviceInfo();
+    val productKey = optString("productKey");
+    if (!productKey.isNullOrBlank()) {
+        deviceInfo.productKey = productKey
+    }
+    val productId = optString("productId");
+    if (!productId.isNullOrBlank()) {
+        deviceInfo.productId = productId
+    }
+    val id = optString("id");
+    if (!id.isNullOrBlank()) {
+        deviceInfo.id = id
+    }
+    val linkType = optString("linkType");
+    if (!linkType.isNullOrBlank()) {
+        deviceInfo.linkType = linkType
+    }
+    val protocolVersion = optString("protocolVersion");
+    if (!protocolVersion.isNullOrBlank()) {
+        deviceInfo.linkType = protocolVersion
+    }
+    return deviceInfo;
 }
 

@@ -2,8 +2,8 @@ package com.fenda.iot.flutter.channel
 
 import android.content.Context
 import androidx.annotation.NonNull;
-import com.aliyun.alink.business.devicecenter.api.add.DeviceInfo
 import com.aliyun.alink.linksdk.tmp.api.DeviceManager
+import com.aliyun.iot.aep.sdk.IoTSmart
 import com.aliyun.iot.aep.sdk.login.ILoginCallback
 import com.aliyun.iot.aep.sdk.login.ILogoutCallback
 import com.aliyun.iot.aep.sdk.login.LoginBusiness
@@ -11,6 +11,7 @@ import com.fenda.iot.third.api.*
 import com.fenda.iot.third.api.device.DevicePanelApi
 import com.fenda.iot.third.api.device.DispatchNetAPI
 import com.fenda.iot.third.api.device.SubDeviceApi
+import com.fenda.iot.third.utils.DEBUG
 import com.fenda.iot.third.utils.log
 
 import io.flutter.embedding.engine.plugins.FlutterPlugin
@@ -62,6 +63,11 @@ public class AliIotPlugin : FlutterPlugin, MethodCallHandler, BasicMessageChanne
 
     override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
         when (call.method) {
+            "setDebug" -> {
+                DEBUG = call.argument<Boolean>("debug") ?: true
+                IoTSmart.setDebug(DEBUG)
+                result.success(true)
+            }
             "getPlatformVersion" -> result.success("Android ${android.os.Build.VERSION.RELEASE}")
 
             "requestApi" -> {
@@ -152,7 +158,7 @@ public class AliIotPlugin : FlutterPlugin, MethodCallHandler, BasicMessageChanne
             "setDevicePanelProperties" -> {
                 val params = call.arguments?.tranJson()?.getString("params")
                 if (params != null) {
-                    devicePanelApi?.setProperties(params,result)
+                    devicePanelApi?.setProperties(params, result)
                 } else {
                     result.error("-1", "params is null", null)
                 }
@@ -172,19 +178,28 @@ public class AliIotPlugin : FlutterPlugin, MethodCallHandler, BasicMessageChanne
                 devicePanelApi = null
                 result.success(true)
             }
-            "dispatchNetBy" -> {
-                val device = call.argument<DeviceInfo>("deviceInfo")
-                if (device != null) {
-                    eventSinkMap["dispatchNetBy"]?.let {
-                        DispatchNetAPI.dispatchNetBy(context, device, it)
-                    }
+            "startAddDevice" -> {
+                val device = call.arguments.tranJson()?.toDeviceInfo()
+                val dispatchNetEventSink: EventChannel.EventSink? = eventSinkMap["startAddDevice"]
+                if (device != null && dispatchNetEventSink != null) {
+                    DispatchNetAPI.startAddDevice(context, device, dispatchNetEventSink, methodChannel)
+                    result.success(true)
+                } else {
+                    result.error("-1", "device or dispatchNetEventSink is null", null)
                 }
+            }
+            "stopAddDevice" -> {
+                DispatchNetAPI.stopAddDevice()
+                result.success(null)
+            }
+            "openSystemWiFi" -> {
+                DispatchNetAPI.openSystemWiFi(context, result)
             }
             "getDeviceToken" -> {
                 val productKey = call.argument<String>("productKey")
                 val deviceName = call.argument<String>("deviceName")
                 if (productKey != null && deviceName != null) {
-                    DispatchNetAPI.getDeviceToken(context, productKey, deviceName)
+                    DispatchNetAPI.getDeviceToken(context, productKey, deviceName, result)
                 }
             }
             "bindByToken" -> {
@@ -192,7 +207,7 @@ public class AliIotPlugin : FlutterPlugin, MethodCallHandler, BasicMessageChanne
                 val deviceName = call.argument<String>("deviceName")
                 val token = call.argument<String>("token")
                 if (productKey != null && deviceName != null && token != null) {
-                    DispatchNetAPI.bindByToken(productKey, deviceName, token)
+                    DispatchNetAPI.bindByToken(productKey, deviceName, token, result)
                 }
             }
             else -> result.notImplemented()
@@ -201,7 +216,9 @@ public class AliIotPlugin : FlutterPlugin, MethodCallHandler, BasicMessageChanne
     }
 
     override fun onDetachedFromEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {
+        eventChannel.setStreamHandler(null)
         methodChannel.setMethodCallHandler(null)
+        basicMessageChannel.setMessageHandler(null)
     }
 
     override fun onMessage(message: Any?, reply: BasicMessageChannel.Reply<Any>) {
@@ -215,9 +232,14 @@ public class AliIotPlugin : FlutterPlugin, MethodCallHandler, BasicMessageChanne
 
     override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
         val type = arguments as? String
+        log("EventChannel onListen $type", "arguments: $arguments ,events: $events")
         when (type) {
-            "startDiscovery" -> eventSinkMap[type] = events
-            "dispatchNetBy" -> eventSinkMap[type] = events
+            "startDiscovery" -> {
+                eventSinkMap[type] = events
+            }
+            "startAddDevice" -> {
+                eventSinkMap[type] = events
+            }
             "gatewayPermit" -> {
                 eventSinkMap[type] = events
                 SubDeviceApi.registerListener(events)
@@ -226,16 +248,21 @@ public class AliIotPlugin : FlutterPlugin, MethodCallHandler, BasicMessageChanne
                 eventSinkMap[type] = events
                 devicePanelApi?.subAllEvents(events)
             }
-            else -> log("EventChannel onListen", "arguments: $arguments ,events: $events")
+            else -> log("EventChannel onListen", "not find method to handle: $type")
         }
 
     }
 
     override fun onCancel(arguments: Any?) {
         val type = arguments as? String
+        log("EventChannel onCancel $type", "arguments: $arguments")
         when (type) {
-            "startDiscovery" -> eventSinkMap[type] = null
-            "dispatchNetBy" -> eventSinkMap[type] = null
+            "startDiscovery" -> {
+                eventSinkMap[type] = null
+            }
+            "startAddDevice" -> {
+                eventSinkMap[type] = null
+            }
             "gatewayPermit" -> {
                 SubDeviceApi.unRegisterListener()
                 eventSinkMap[type] = null
@@ -243,7 +270,7 @@ public class AliIotPlugin : FlutterPlugin, MethodCallHandler, BasicMessageChanne
             "subDevicePanelEvent" -> {
                 eventSinkMap[type] = null
             }
-            else -> log("EventChannel onCancel", "arguments: $arguments")
+            else -> log("EventChannel onCancel", "not find method to handle: $type")
         }
 
     }

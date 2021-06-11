@@ -14,7 +14,9 @@ class LoginBusiness {
     }
 
     static func login(_ authCode: String,completionHandler: (([AnyHashable : Any]?, Error?) -> Void)!) {
-        IMSAccountThird().loginGetAuthCode(authCode, completionHandler: completionHandler)
+        let iMSAccountThird = IMSAccountThird()
+        iMSAccountThird.fLoginCallDelegate = completionHandler;
+        iMSAccountThird.loginGetAuthCode(authCode, completionHandler: completionHandler)
 
     }
 

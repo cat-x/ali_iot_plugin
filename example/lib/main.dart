@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 
 import 'package:flutter/services.dart';
-import 'package:ali_iot_plugin/ali_iot_plugin.dart';
+import 'package:ali_iot_plugin/index.dart';
 
 void main() {
   runApp(MyApp());

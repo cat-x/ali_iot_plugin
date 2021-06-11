@@ -4,13 +4,15 @@
 
 > 基于阿里生活物联网平台的Android和iOS架包实现的Flutter插件，方便开发自有APP
 
+***特别注意，本插件不提供飞燕项目中的插件功能，因为插件功能实际上是使用React Native 开发的UI，既然需要使用Flutter开发界面，则无需使用到该功能***
+
 ## Get started
 
 ### Add dependency
 
 ```yaml
 dependencies:
-  ali_iot_plugin: ^0.0.x #请使用pub上的最新版本
+  ali_iot_plugin: ^0.0.3 #请使用pub上的最新版本
 ```
 
 1. Android
@@ -64,6 +66,8 @@ CommonAPI.authCodeLogin(authCode);
 
 DispatchNetAPI.startDiscovery(callback);
 DispatchNetAPI.stopDiscovery();
+DispatchNetAPI.startAddDevice(callback);
+DispatchNetAPI.stopAddDevice();
 DispatchNetAPI.listenGatewayPermit(callback);
 DispatchNetAPI.stopListenGatewayPermit();
 

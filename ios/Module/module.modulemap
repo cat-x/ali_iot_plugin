@@ -1,0 +1,16 @@
+module CommonCrypto [system] {
+    header "/usr/include/CommonCrypto/CommonCrypto.h"
+    export *
+}
+
+module SwiftLibXML2 [system] {
+  header "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk/usr/include/libxml2/libxml/xpath.h"
+  export *
+}
+
+framework module ali_iot_plugin {
+  umbrella header "ali_iot_plugin-umbrella.h"
+
+  export *
+  module * { export * }
+}

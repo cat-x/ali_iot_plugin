@@ -2,14 +2,14 @@ group 'com.fenda.iot.flutter.channel'
 version '1.0-SNAPSHOT'
 
 buildscript {
-    ext.kotlin_version = '1.4.21'
+    ext.kotlin_version = '1.5.10'
     repositories {
         google()
         jcenter()
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:4.1.1'
+        classpath 'com.android.tools.build:gradle:4.2.1'//Flutter Unsupported Android Plugin version: 4.1.2
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
@@ -18,13 +18,23 @@ rootProject.allprojects {
     repositories {
         google()
         jcenter()
-        maven { url "https://jitpack.io" }
-        maven { url 'https://maven.aliyun.com/repository/jcenter' }
-        maven { url 'https://maven.google.com' }
+        maven {
+            allowInsecureProtocol = true
+            url "https://jitpack.io" }
+        maven {
+            allowInsecureProtocol = true
+            url 'https://maven.aliyun.com/repository/jcenter' }
+        maven {
+            allowInsecureProtocol = true
+            url 'https://maven.google.com' }
         mavenLocal()
-        maven { url "http://maven.aliyun.com/nexus/content/repositories/releases" }
+        maven {
+            allowInsecureProtocol = true
+            url "http://maven.aliyun.com/nexus/content/repositories/releases" }
         mavenCentral()
-        maven { url "http://maven.aliyun.com/nexus/content/repositories/snapshots" }
+        maven {
+            allowInsecureProtocol = true
+            url "http://maven.aliyun.com/nexus/content/repositories/snapshots" }
     }
 }
 

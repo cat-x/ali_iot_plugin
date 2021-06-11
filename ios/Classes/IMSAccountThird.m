@@ -19,6 +19,7 @@
 
 - (void)loginGetAuthCode:(NSString *)authCode
        completionHandler:(void (^)(NSDictionary *info, NSError *error))completionHandler {
+    self.fLoginCallDelegate = completionHandler;
     //自有账号登录并通过Oauth 2.0服务获取AuthCode
     id <ALBBOpenAccountSSOService> ssoService = ALBBService(ALBBOpenAccountSSOService);
     [ssoService oauthWithThirdParty:authCode delegate:self];
@@ -33,6 +34,13 @@
     } else {
         //处理登录失败
     }
-    [self loginCallDelegate];
+//    [self loginCallDelegate];
+    NSDictionary *userInfo = @{};
+    if (error == nil) {
+        ALBBOpenAccountUser *user = session.getUser;
+//        NSDictionary *stu = @{@"accountId":user.accountId,@"openId":user.openId,@"avatarUrl":user.avatarUrl};
+        userInfo = user.openaccountInfoDict;
+    }
+    self.fLoginCallDelegate(userInfo, error);
 }
 @end

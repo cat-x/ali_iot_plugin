@@ -14,7 +14,12 @@ Pod::Spec.new do |s|
   s.author           = { 'CiYuan Cat-x' => 'a599231042@163.com' }
   s.source           = { :path => '.' }
   s.source_files = 'Classes/**/*'
-  s.public_header_files = 'Classes/**/*.h'
+    # //modulemap要配置在source_files中，配置在module_map中不起作用
+  # //s.source_files  = "Classes/**/*.{h,m}", "Classes/**/*.swift", "Module/*.modulemap"
+  # // s.preserve_path = "Module/module.modulemap"
+  # //s.module_map = 'Module/module.modulemap'
+  #s.public_header_files = 'Classes/**/*.h'
+  #s.public_header_files = 'Classes/**/**/*.h'
   s.documentation_url = 'https://pub.dev/packages/ali_iot_plugin'
   s.dependency 'Flutter'
   s.platform = :ios, '9.0'
@@ -27,6 +32,12 @@ Pod::Spec.new do |s|
   # s.frameworks = 'UIKit', 'Foundation'
   s.static_framework = true # 是否包含静态库框架（注意：不能写在subspec子模块中）
   
+  # s.vendored_libraries
+  #私有库文件
+  s.source_files = 'AlicloudALBBOpenAccount/**/*.{h,m}'
+  s.vendored_frameworks = 'AlicloudALBBOpenAccount/Frameworks/ALBBOpenAccountCloud.framework','AlicloudALBBOpenAccount/Frameworks/ALBBOpenAccountSSO.framework'
+  #s.user_target_xcconfig = { 'CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES' => 'YES' }
+
   # 依赖关系,该项目所依赖的其他库,如果有多个需要填写多个s.dependency
   # # github 官方 pod 源
   # source 'https://github.com/CocoaPods/Specs.git' 
@@ -39,6 +50,10 @@ Pod::Spec.new do |s|
     ss.dependency 'IMSIotSmart', '1.2.3'
       
     # OA
+    #私有库文件
+    ss.source_files = 'AlicloudALBBOpenAccount/**/**/*.{h,m}','AlicloudALBBOpenAccount/**/**/*.swift'
+    #私有库资源文件这里不仅仅是bundle文件，例如xib等
+    ss.resources = 'AlicloudALBBOpenAccount/**/*.{bundle}'
     ss.dependency 'AlicloudALBBOpenAccount', '3.4.0.47'
     
     #facebook依赖
@@ -99,5 +114,6 @@ Pod::Spec.new do |s|
 
   # 转换速度快、使用简单方便的字典转模型框架
   s.dependency 'MJExtension'
+
 
 end

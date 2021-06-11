@@ -10,7 +10,7 @@ import com.fenda.iot.flutter.channel.BuildConfig
  * For FendaIot
  */
 
-const val TAG = "ALI_SDK"
+const val TAG = "AliIotPlugin"
 var DEBUG: Boolean = true/*BuildConfig.DEBUG*/
 
 fun log(vararg message: Any, error: Throwable? = null, isMustPrint: Boolean = false) {

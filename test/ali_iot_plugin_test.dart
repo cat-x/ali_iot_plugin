@@ -1,6 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ali_iot_plugin/ali_iot_plugin.dart';
+import 'package:ali_iot_plugin/src/ali_iot_plugin.dart';
 
 void main() {
   const MethodChannel channel = MethodChannel('ali_iot_plugin');

@@ -1,6 +1,9 @@
 package com.fenda.iot.third.api.device
 
 import android.content.Context
+import android.content.Intent
+import android.provider.Settings
+import androidx.core.content.ContextCompat.startActivity
 import com.aliyun.alink.business.devicecenter.api.add.AddDeviceBiz
 import com.aliyun.alink.business.devicecenter.api.add.DeviceInfo
 import com.aliyun.alink.business.devicecenter.api.add.IAddDeviceListener
@@ -10,8 +13,11 @@ import com.aliyun.alink.business.devicecenter.base.DCErrorCode
 import com.fenda.iot.third.api.ApiTools
 import com.fenda.iot.third.api.toJSONObject
 import com.fenda.iot.third.api.toJSONString
+import com.fenda.iot.third.api.toJson
 import com.fenda.iot.third.utils.log
 import io.flutter.plugin.common.EventChannel
+import io.flutter.plugin.common.MethodChannel
+import org.json.JSONObject
 import java.util.*
 import kotlin.collections.HashMap
 
@@ -23,6 +29,7 @@ import kotlin.collections.HashMap
 object DispatchNetAPI {
 
     private var isStartDiscovery: Boolean = false
+    private var isStartAddDevice: Boolean = false
 
     /** 开始发现设备
      *
@@ -44,6 +51,7 @@ object DispatchNetAPI {
         if (isStartDiscovery) {
             stopDiscovery()
         }
+        isStartDiscovery = true
         LocalDeviceMgr.getInstance().startDiscovery(context, discoveryTypeSet, enrolleeQueryMap, callback)
     }
 
@@ -53,10 +61,12 @@ object DispatchNetAPI {
      * * 停止发现本地已配网设备和待配网设备。调用该接口会清除已发现设备列表，确保与启动设备发现startDiscovery()成对调用。
      */
     fun stopDiscovery() {
-        if (isStartDiscovery) {
+        isStartDiscovery = false
+        try {
             LocalDeviceMgr.getInstance().stopDiscovery()
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
-
     }
 
 
@@ -77,8 +87,11 @@ object DispatchNetAPI {
      * *  4.监听配网结果。
     可以在配网完成后调用LocalDeviceMgr getDeviceToken接口获取绑定token，并调用基于token方式设备绑定完成设备的绑定。
      */
-    fun dispatchNetBy(context: Context, deviceInfo: DeviceInfo, eventSink: EventChannel.EventSink) {
-
+    fun startAddDevice(context: Context, deviceInfo: DeviceInfo, eventSink: EventChannel.EventSink, methodChannel: MethodChannel) {
+        if (isStartAddDevice) {
+            stopAddDevice()
+        }
+        isStartAddDevice = true
         /**
          * 第一步：设置待配网设备信息
          *
@@ -111,45 +124,82 @@ object DispatchNetAPI {
          * 前置步骤，设置待配信息并开始配网
          */
         AddDeviceBiz.getInstance().startAddDevice(context, object : IAddDeviceListener {
-            override fun onPreCheck(b: Boolean, dcErrorCode: DCErrorCode) {
+            override fun onPreCheck(b: Boolean, dcErrorCode: DCErrorCode?) {
                 // 参数检测回调
+                log("startAddDevice", "onPreCheck->", "$b dcErrorCode->$dcErrorCode")
             }
 
             override fun onProvisionPrepare(prepareType: Int) {
+                log("startAddDevice", "onProvisionPrepare->", "prepareType:$prepareType")
                 /**
                  * 第三步：配网准备阶段，传入Wi-Fi信息
                  * TODO 修改使用手机当前连接的Wi-Fi的SSID和password
                  */
                 eventSink.success(listOf("onProvisionPrepare", prepareType))
                 if (prepareType == 1) {
-                    AddDeviceBiz.getInstance().toggleProvision("Your Wi-Fi ssid", "Your Wi-Fi password", 60)
+                    methodChannel.invokeMethod("toggleProvision", {}, object : MethodChannel.Result {
+                        override fun success(result: Any?) {
+                            log("startAddDevice", "toggleProvision->", "success:$result")
+                            val arguments = result as? JSONObject
+                            if (arguments != null) {
+                                //方法名标识
+                                val ssid = arguments.optString("ssid")
+                                val password = arguments.optString("password")
+                                if (!ssid.isNullOrBlank() && !password.isNullOrBlank()) {
+                                    AddDeviceBiz.getInstance().toggleProvision(ssid, password, 60)
+                                } else {
+                                    log("startAddDevice", "toggleProvision->", "had error ssid=>$ssid password=>$password")
+                                }
+                            }
+                        }
+
+                        override fun error(errorCode: String?, errorMessage: String?, errorDetails: Any?) {
+                            log("startAddDevice", "toggleProvision->", "error:$errorCode errorMessage:$errorMessage errorDetails:$errorDetails")
+                        }
+
+                        override fun notImplemented() {
+                            log("startAddDevice", "toggleProvision->", "notImplemented")
+                        }
+                    });
+
                 }
             }
 
             override fun onProvisioning() {
+                log("startAddDevice", "onProvisioning->")
                 // 配网中
                 eventSink.success(listOf("onProvisioning"))
             }
 
             override fun onProvisionStatus(provisionStatus: ProvisionStatus) {
-                eventSink.success(listOf("onProvisionStatus", provisionStatus.code(), provisionStatus.message()))
+                log("startAddDevice", "onProvisionStatus->", "provisionStatus:$provisionStatus")
+                eventSink.success(listOf("onProvisionStatus", provisionStatus.code(), provisionStatus.message(), provisionStatus.extraParams))
                 /**
                  * 第四步：配网中，配网UI引导
                  * TODO 根据配网回调做 UI 引导
                  */
+                if (provisionStatus == ProvisionStatus.PROVISION_APP_TOKEN) {
+                    return
+                    // 比如android 10，或者非android 10发现或连接设备热点失败。
+                    // 需要引导用户连接设备热点，否则会配网失败
+                    deviceInfo.token = provisionStatus.extraParams["appToken"] as String?
+                    eventSink.success(listOf("onProvisionedResult", mapOf("isSuccess" to true, "deviceInfo" to deviceInfo.toJSONString(), "errorCode" to null)))
+                    return
+                }
                 if (provisionStatus == ProvisionStatus.SAP_NEED_USER_TO_CONNECT_DEVICE_AP) {
                     // 比如android 10，或者非android 10发现或连接设备热点失败。
                     // 需要引导用户连接设备热点，否则会配网失败
-                    return;
+                    return
                 }
                 if (provisionStatus == ProvisionStatus.SAP_NEED_USER_TO_RECOVER_WIFI) {
                     // 引导用户恢复手机Wi-Fi连接，否则会配网失败
-                    return;
+                    return
                 }
             }
 
-            override fun onProvisionedResult(isSuccess: Boolean, deviceInfo: DeviceInfo, errorCode: DCErrorCode) {
-                eventSink.success(listOf("onProvisionedResult", mapOf("isSuccess" to isSuccess, "deviceInfo" to deviceInfo.toJSONString(), "errorCode" to errorCode.toJSONString())))
+            override fun onProvisionedResult(isSuccess: Boolean, deviceInfo: DeviceInfo?, errorCode: DCErrorCode?) {
+                log("startAddDevice", "onProvisionedResult->", "isSuccess:$isSuccess deviceInfo:$deviceInfo errorCode:$errorCode")
+                eventSink.success(listOf("onProvisionedResult", mapOf("isSuccess" to isSuccess, "deviceInfo" to deviceInfo?.toJSONString(), "errorCode" to errorCode?.toJSONString())))
                 /**
                  * 第四步：监听配网结果
                  */
@@ -158,9 +208,14 @@ object DispatchNetAPI {
         })
     }
 
+    fun stopAddDevice() {
+        isStartAddDevice = false
+        AddDeviceBiz.getInstance().stopAddDevice()
+    }
+
 
     /** 获取绑定token */
-    fun getDeviceToken(context: Context, productKey: String, deviceName: String) {
+    fun getDeviceToken(context: Context, productKey: String, deviceName: String, resultCallback: MethodChannel.Result) {
         /**
          * 第一步：获取绑定token
          */
@@ -172,10 +227,16 @@ object DispatchNetAPI {
                 /**
                  * 第二步：调用绑定接口
                  */
+                if (result == null) {
+                    resultCallback.error("-1", "getDeviceToken onSuccess, but result is null", "")
+                } else {
+                    resultCallback.success(result.toJSONObject());
+                }
+
             }
 
             override fun onFail(errorCode: DCErrorCode?) {
-
+                resultCallback.error(errorCode?.code ?: "-1", errorCode?.msg ?: "getDeviceToken errorCode, but errorCode is null", "")
             }
         })
 
@@ -184,7 +245,7 @@ object DispatchNetAPI {
     /**
      * 基于token方式设备绑定
      */
-    fun bindByToken(productKey: String, deviceName: String, token: String) {
+    fun bindByToken(productKey: String, deviceName: String, token: String, result: MethodChannel.Result) {
         val device: MutableMap<String, Any> = HashMap(3)
         device["productKey"] = productKey
         device["deviceName"] = deviceName
@@ -196,12 +257,28 @@ object DispatchNetAPI {
             params = device
             onFailure = {
                 log("bindByToken", "onFailure->", error = it)
+                result.error(it?.localizedMessage ?: "", it?.message ?: "", it?.toString() ?: "")
             }
 
-            onResponse = {
-                log("bindByToken", "onResponse->", it)
+            onResponse = { data ->
+                val json = data.toJson()
+                log("bindByToken", "onResponse->", json)
+                result.success(json)
+
             }
         }
+    }
+
+
+    fun openSystemWiFi(context: Context, result: MethodChannel.Result) {
+        try {
+            context.startActivity(Intent(Settings.ACTION_WIFI_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            result.success(true)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            result.error("-1", e.message, e.localizedMessage)
+        }
+
     }
 
 }

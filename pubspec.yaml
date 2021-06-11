@@ -1,11 +1,11 @@
 name: ali_iot_plugin
-description: 阿里飞燕平台 Flutter plugin.
-version: 0.0.1
+description: 阿里飞燕平台(生活物联网平台) Flutter plugin.封装Android和iOS SDK功能
+version: 0.0.3
 author: Cat-x <a599231042@163.com>
 homepage: https://github.com/cat-x/ali_iot_plugin
 
 environment:
-  sdk: ">=2.9.0 <3.0.0"
+  sdk: '>=2.12.0 <3.0.0'
   flutter: ">=1.20.0 <2.0.0"
 
 dependencies:

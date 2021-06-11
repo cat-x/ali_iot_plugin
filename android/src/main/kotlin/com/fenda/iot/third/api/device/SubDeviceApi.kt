@@ -36,8 +36,10 @@ object SubDeviceApi {
             log("SubDeviceApi", "接收到Topic = $method, data=$data")
             if (method == TOPIC_PATH) {
                 events?.success(data)
+                if (events == null) {
+                    log("SubDeviceApi", "接收到Topic = $method, 但因为events为null所以发送失败")
+                }
             }
-
         }
 
         override fun shouldHandle(method: String): Boolean {
